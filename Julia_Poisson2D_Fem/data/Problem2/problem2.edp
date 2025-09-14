@@ -1,0 +1,87 @@
+//
+// Problem 2
+// 2D Poisson problem with non homogeneous boundary conditions
+// Author: Manolo Venturin
+//
+
+// Mesh
+int nn = 10;
+mesh Th = square(nn, nn);
+
+// Domain
+plot(Th, fill=true, cmm="Domain", wait=true);
+
+// Visualization
+plot(Th, cmm="Mesh", wait=true);
+
+// Export mesh
+if (true) {
+	// Opening output file
+	ofstream fout("mesh.dat");
+	
+	// Write: problem dimension (2), nb of vertices, nb of triangles and nb of borders
+	fout << 2 << " " << Th.nv << " " << Th.nt << " " << Th.nbe << " " << "\n";
+	
+	// Write vertices
+	fout << "# Vertices [x y]" << "\n";
+	for (int i = 0; i < Th.nv; i++) {
+		fout << Th(i).x << " " << Th(i).y << "\n";
+	}
+
+	// Write triangles
+	fout << "# Triangles [ind1 ind2 ind3] from zero" << "\n";
+	for (int i = 0; i < Th.nt; i++) {
+		fout << Th[i][0] << " " << Th[i][1] << " " << Th[i][2] << "\n";
+	}
+
+	// Write boundaries with labels
+	fout << "# Boundaries [ind1 ind2 label]" << "\n";
+	for (int i = 0; i < Th.nbe; i++) {
+		fout << Th.be(i)[0] << " " << Th.be(i)[1] << " " << Th.be(i).label << "\n";
+	}
+}
+
+// The finite element space
+fespace Vh(Th, P1);
+Vh u, v;
+
+// Define a function f
+func s = 1;
+
+// Define the PDE
+solve Poisson(u,v)
+    = int2d(Th)(dx(u)*dx(v) + dy(u)*dy(v))
+    - int2d(Th)(s*v)
+    + on(1, u=x*(x-1)) + on(2, u=y*(y-1)) + on(3, u=x*(x-1)) + on(4, u=y*(y-1));
+	
+// Plot the result
+plot(u, cmm="Solution 1", wait=true);
+
+// Another way getting K and F
+varf a(u,v)
+    = int2d(Th)(dx(u)*dx(v) + dy(u)*dy(v))
+    + on(1, u=1) + on(2, u=2) + on(3, u=3) + on(4, u=4);
+matrix A = a(Vh, Vh);
+
+varf l(u,v)
+    = int2d(Th)(s*v)
+    + on(1, u=x*(x-1)) + on(2, u=y*(y-1)) + on(3, u=x*(x-1)) + on(4, u=y*(y-1));
+Vh F;
+F[] = l(0,Vh);
+
+// Vector solution
+u[] = A^-1*F[];
+
+// Another plot
+plot(u, cmm="Solution 2", wait=true);
+
+// Save solution to file
+if (true) {
+	// Opening output file
+	ofstream fout("solution.dat");
+	
+	// Write solution
+	for(int i=0; i<Th.nv; i++){
+		fout<< Th(i).x << " " << Th(i).y << " " << u[][i] << endl;
+	}
+}

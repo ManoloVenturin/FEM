@@ -1,0 +1,98 @@
+//
+// Problem 3
+// 2D Poisson problem with homogeneous Dirichlet bcs and zero Neumann bc
+// Author: Manolo Venturin
+//
+
+// Borders
+
+// - outer square boundary (bottom, left, top, right)
+border sq1(t=0,1) {x=t; y=0; label=1;}
+border sq2(t=0,1) {x=1; y=t; label=1;}
+border sq3(t=0,1) {x=1-t; y=1; label=1;}
+border sq4(t=0,1) {x=0; y=1-t; label=1;}
+
+// - circular hole centered in (0.5, 0.5) with radius 0.3
+real r = 0.3;
+border hole(t=0, 2*pi) {x = 0.5 + r*cos(t); y = 0.5 + r*sin(t); label=2;}
+
+// Mesh: square with hole
+mesh Th = buildmesh(sq1(10) + sq2(10) + sq3(10) + sq4(10) + hole(-20));
+
+// Domain
+plot(Th, fill=true, cmm="Domain", bw=true, wait=true);
+
+// Visualization
+plot(Th, cmm="Mesh", bw=true, wait=true);
+
+// Export mesh
+if (true) {
+	// Opening output file
+	ofstream fout("mesh.dat");
+	
+	// Write: problem dimension (2), nb of vertices, nb of triangles and nb of borders
+	fout << 2 << " " << Th.nv << " " << Th.nt << " " << Th.nbe << " " << "\n";
+	
+	// Write vertices
+	fout << "# Vertices [x y]" << "\n";
+	for (int i = 0; i < Th.nv; i++) {
+		fout << Th(i).x << " " << Th(i).y << "\n";
+	}
+
+	// Write triangles
+	fout << "# Triangles [ind1 ind2 ind3] from zero" << "\n";
+	for (int i = 0; i < Th.nt; i++) {
+		fout << Th[i][0] << " " << Th[i][1] << " " << Th[i][2] << "\n";
+	}
+
+	// Write boundaries with labels
+	fout << "# Boundaries [ind1 ind2 label]" << "\n";
+	for (int i = 0; i < Th.nbe; i++) {
+		fout << Th.be(i)[0] << " " << Th.be(i)[1] << " " << Th.be(i).label << "\n";
+	}
+}
+
+// The finite element space
+fespace Vh(Th, P1);
+Vh u, v;
+
+// Define the source term s as a function
+func s = 1;
+
+// Define the PDE
+solve Poisson(u,v)
+    = int2d(Th)(dx(u)*dx(v) + dy(u)*dy(v))
+    - int2d(Th)(s*v)
+    + on(1, u=0);
+	
+// Plot the result
+plot(u, cmm="Solution 1", wait=true);
+
+// Another way getting K and F
+varf a(u,v)
+    = int2d(Th)(dx(u)*dx(v) + dy(u)*dy(v))
+    + on(1, u=0);
+matrix A = a(Vh, Vh);
+
+varf l(u,v)
+    = int2d(Th)(s*v)
+    + on(1, u=0);
+Vh F;
+F[] = l(0,Vh);
+
+// Vector solution
+u[] = A^-1*F[];
+
+// Another plot
+plot(u, cmm="Solution 2", wait=true);
+
+// Save solution to file
+if (true) {
+	// Opening output file
+	ofstream fout("solution.dat");
+	
+	// Write solution
+	for(int i=0; i<Th.nv; i++){
+		fout<< Th(i).x << " " << Th(i).y << " " << u[][i] << endl;
+	}
+}
