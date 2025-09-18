@@ -1,5 +1,6 @@
 # main_problem.jl
 # Author: Manolo Venturin
+# Restart Julia to run the program
 
 using Plots
 
@@ -93,8 +94,9 @@ plot_solution(mesh, u)
 filename = joinpath(@__DIR__, "img", problem_dir * "_solution1.png")
 savefig(filename)
 
-# Plot (contour)
-plot_solution(mesh, u; style="contour")
+# This code has a bug in tricontour!
+# # Plot (contour)
+# plot_solution(mesh, u; style="contour")
 
-filename = joinpath(@__DIR__, "img", problem_dir * "_solution2.png")
-savefig(filename)
+# filename = joinpath(@__DIR__, "img", problem_dir * "_solution2.png")
+# savefig(filename)
