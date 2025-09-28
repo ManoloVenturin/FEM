@@ -66,7 +66,7 @@ func h = 1;
 solve Poisson(u,v)
     = int2d(Th)(dx(u)*dx(v) + dy(u)*dy(v))
     - int2d(Th)(s*v)
-	+ int1d(Th,2)(h*v)
+	- int1d(Th,2)(h*v)
     + on(1, u=0);
 	
 // Plot the result
@@ -80,7 +80,7 @@ matrix A = a(Vh, Vh);
 
 varf l(u,v)
     = int2d(Th)(s*v)
-	- int1d(Th,2)(h*v)
+	+ int1d(Th,2)(h*v)
     + on(1, u=0);
 Vh F;
 F[] = l(0,Vh);
@@ -101,3 +101,11 @@ if (true) {
 		fout<< Th(i).x << " " << Th(i).y << " " << u[][i] << endl;
 	}
 }
+
+// Save matrix info
+if (true) {
+	// Save F
+	ofstream file("F_data.dat");
+	file << F[];
+}
+
